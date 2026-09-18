@@ -19,20 +19,20 @@ LatexCmds['∗'] =
 LatexCmds.therefor = LatexCmds.therefore = bindBinaryOperator(
   '\\therefore ',
   '&there4;',
-  'therefore'
+  'therefore',
 );
 
 LatexCmds.cuz = LatexCmds.because = bindBinaryOperator(
   // l33t
   '\\because ',
   '&#8757;',
-  'because'
+  'because',
 );
 
 LatexCmds.prop = LatexCmds.propto = bindBinaryOperator(
   '\\propto ',
   '&prop;',
-  'proportional to'
+  'proportional to',
 );
 
 LatexCmds['≈'] =
@@ -43,13 +43,13 @@ LatexCmds['≈'] =
 LatexCmds.isin = LatexCmds['in'] = bindBinaryOperator(
   '\\in ',
   '&isin;',
-  'is in'
+  'is in',
 );
 
 LatexCmds.ni = LatexCmds.contains = bindBinaryOperator(
   '\\ni ',
   '&ni;',
-  'is not in'
+  'is not in',
 );
 
 LatexCmds.notni =
@@ -61,7 +61,7 @@ LatexCmds.notni =
 LatexCmds.sub = LatexCmds.subset = bindBinaryOperator(
   '\\subset ',
   '&sub;',
-  'subset'
+  'subset',
 );
 
 LatexCmds.sup =
@@ -122,7 +122,7 @@ LatexCmds.nsupe =
     bindBinaryOperator(
       '\\not\\supseteq ',
       '&#8841;',
-      'not superset or equal to'
+      'not superset or equal to',
     );
 
 //the canonical sets of numbers
@@ -138,7 +138,7 @@ LatexCmds.mathbb = class extends MathCommand {
     return optWhitespace
       .then(string('{'))
       .then(optWhitespace)
-      .then(regex(/^[NPZQRCH]/))
+      .then(regex(/^[NPZDQRCH]/))
       .skip(optWhitespace)
       .skip(string('}'))
       .map(function (c) {
@@ -172,6 +172,11 @@ LatexCmds.Z =
   LatexCmds.Integers =
     bindVanillaSymbol('\\mathbb{Z}', '&#8484;', 'integers');
 
+LatexCmds.D =
+  LatexCmds.decimals =
+  LatexCmds.Decimals =
+    bindVanillaSymbol('\\mathbb{D}', '&#120123;', 'decimals');
+
 LatexCmds.Q =
   LatexCmds.rationals =
   LatexCmds.Rationals =
@@ -202,7 +207,7 @@ LatexCmds.H =
 LatexCmds.quad = LatexCmds.emsp = bindVanillaSymbol(
   '\\quad ',
   '    ',
-  '4 spaces'
+  '4 spaces',
 );
 LatexCmds.qquad = bindVanillaSymbol('\\qquad ', '        ', '8 spaces');
 /* spacing special characters, gonna have to implement this in LatexCommandInput::onText somehow
@@ -221,36 +226,36 @@ LatexCmds.diamond = bindVanillaSymbol('\\diamond ', '&#9671;', 'diamond');
 LatexCmds.bigtriangleup = bindVanillaSymbol(
   '\\bigtriangleup ',
   '&#9651;',
-  'triangle up'
+  'triangle up',
 );
 LatexCmds.ominus = bindVanillaSymbol('\\ominus ', '&#8854;', 'o minus');
 LatexCmds.uplus = bindVanillaSymbol('\\uplus ', '&#8846;', 'disjoint union');
 LatexCmds.bigtriangledown = bindVanillaSymbol(
   '\\bigtriangledown ',
   '&#9661;',
-  'triangle down'
+  'triangle down',
 );
 LatexCmds.sqcap = bindVanillaSymbol(
   '\\sqcap ',
   '&#8851;',
-  'greatest lower bound'
+  'greatest lower bound',
 );
 LatexCmds.triangleleft = bindVanillaSymbol(
   '\\triangleleft ',
   '&#8882;',
-  'triangle left'
+  'triangle left',
 );
 LatexCmds.sqcup = bindVanillaSymbol('\\sqcup ', '&#8852;', 'least upper bound');
 LatexCmds.triangleright = bindVanillaSymbol(
   '\\triangleright ',
   '&#8883;',
-  'triangle right'
+  'triangle right',
 );
 //circledot is not a not real LaTex command see https://github.com/mathquill/mathquill/pull/552 for more details
 LatexCmds.odot = LatexCmds.circledot = bindVanillaSymbol(
   '\\odot ',
   '&#8857;',
-  'circle dot'
+  'circle dot',
 );
 LatexCmds.bigcirc = bindVanillaSymbol('\\bigcirc ', '&#9711;', 'circle');
 LatexCmds.dagger = bindVanillaSymbol('\\dagger ', '&#0134;', 'dagger');
@@ -265,17 +270,17 @@ LatexCmds.succ = bindVanillaSymbol('\\succ ', '&#8827;', 'succeeds');
 LatexCmds.preceq = bindVanillaSymbol(
   '\\preceq ',
   '&#8828;',
-  'precedes or equals'
+  'precedes or equals',
 );
 LatexCmds.succeq = bindVanillaSymbol(
   '\\succeq ',
   '&#8829;',
-  'succeeds or equals'
+  'succeeds or equals',
 );
 LatexCmds.simeq = bindVanillaSymbol(
   '\\simeq ',
   '&#8771;',
-  'similar or equal to'
+  'similar or equal to',
 );
 LatexCmds.mid = bindVanillaSymbol('\\mid ', '&#8739;', 'divides');
 LatexCmds.ll = bindVanillaSymbol('\\ll ', '&#8810;', 'll');
@@ -283,34 +288,34 @@ LatexCmds.gg = bindVanillaSymbol('\\gg ', '&#8811;', 'gg');
 LatexCmds.parallel = bindVanillaSymbol(
   '\\parallel ',
   '&#8741;',
-  'parallel with'
+  'parallel with',
 );
 LatexCmds.nparallel = bindVanillaSymbol(
   '\\nparallel ',
   '&#8742;',
-  'not parallel with'
+  'not parallel with',
 );
 LatexCmds.bowtie = bindVanillaSymbol('\\bowtie ', '&#8904;', 'bowtie');
 LatexCmds.sqsubset = bindVanillaSymbol(
   '\\sqsubset ',
   '&#8847;',
-  'square subset'
+  'square subset',
 );
 LatexCmds.sqsupset = bindVanillaSymbol(
   '\\sqsupset ',
   '&#8848;',
-  'square superset'
+  'square superset',
 );
 LatexCmds.smile = bindVanillaSymbol('\\smile ', '&#8995;', 'smile');
 LatexCmds.sqsubseteq = bindVanillaSymbol(
   '\\sqsubseteq ',
   '&#8849;',
-  'square subset or equal to'
+  'square subset or equal to',
 );
 LatexCmds.sqsupseteq = bindVanillaSymbol(
   '\\sqsupseteq ',
   '&#8850;',
-  'square superset or equal to'
+  'square superset or equal to',
 );
 LatexCmds.doteq = bindVanillaSymbol('\\doteq ', '&#8784;', 'dotted equals');
 LatexCmds.frown = bindVanillaSymbol('\\frown ', '&#8994;', 'frown');
@@ -323,93 +328,93 @@ LatexCmds.ngtr = bindVanillaSymbol('\\ngtr ', '&#8815;', 'not greater than');
 LatexCmds.longleftarrow = bindVanillaSymbol(
   '\\longleftarrow ',
   '&#8592;',
-  'left arrow'
+  'left arrow',
 );
 LatexCmds.longrightarrow = bindVanillaSymbol(
   '\\longrightarrow ',
   '&#8594;',
-  'right arrow'
+  'right arrow',
 );
 LatexCmds.Longleftarrow = bindVanillaSymbol(
   '\\Longleftarrow ',
   '&#8656;',
-  'left arrow'
+  'left arrow',
 );
 LatexCmds.Longrightarrow = bindVanillaSymbol(
   '\\Longrightarrow ',
   '&#8658;',
-  'right arrow'
+  'right arrow',
 );
 LatexCmds.longleftrightarrow = bindVanillaSymbol(
   '\\longleftrightarrow ',
   '&#8596;',
-  'left and right arrow'
+  'left and right arrow',
 );
 LatexCmds.updownarrow = bindVanillaSymbol(
   '\\updownarrow ',
   '&#8597;',
-  'up and down arrow'
+  'up and down arrow',
 );
 LatexCmds.Longleftrightarrow = bindVanillaSymbol(
   '\\Longleftrightarrow ',
   '&#8660;',
-  'left and right arrow'
+  'left and right arrow',
 );
 LatexCmds.Updownarrow = bindVanillaSymbol(
   '\\Updownarrow ',
   '&#8661;',
-  'up and down arrow'
+  'up and down arrow',
 );
 LatexCmds.mapsto = bindVanillaSymbol('\\mapsto ', '&#8614;', 'maps to');
 LatexCmds.nearrow = bindVanillaSymbol(
   '\\nearrow ',
   '&#8599;',
-  'northeast arrow'
+  'northeast arrow',
 );
 LatexCmds.hookleftarrow = bindVanillaSymbol(
   '\\hookleftarrow ',
   '&#8617;',
-  'hook left arrow'
+  'hook left arrow',
 );
 LatexCmds.hookrightarrow = bindVanillaSymbol(
   '\\hookrightarrow ',
   '&#8618;',
-  'hook right arrow'
+  'hook right arrow',
 );
 LatexCmds.searrow = bindVanillaSymbol(
   '\\searrow ',
   '&#8600;',
-  'southeast arrow'
+  'southeast arrow',
 );
 LatexCmds.leftharpoonup = bindVanillaSymbol(
   '\\leftharpoonup ',
   '&#8636;',
-  'left harpoon up'
+  'left harpoon up',
 );
 LatexCmds.rightharpoonup = bindVanillaSymbol(
   '\\rightharpoonup ',
   '&#8640;',
-  'right harpoon up'
+  'right harpoon up',
 );
 LatexCmds.swarrow = bindVanillaSymbol(
   '\\swarrow ',
   '&#8601;',
-  'southwest arrow'
+  'southwest arrow',
 );
 LatexCmds.leftharpoondown = bindVanillaSymbol(
   '\\leftharpoondown ',
   '&#8637;',
-  'left harpoon down'
+  'left harpoon down',
 );
 LatexCmds.rightharpoondown = bindVanillaSymbol(
   '\\rightharpoondown ',
   '&#8641;',
-  'right harpoon down'
+  'right harpoon down',
 );
 LatexCmds.nwarrow = bindVanillaSymbol(
   '\\nwarrow ',
   '&#8598;',
-  'northwest arrow'
+  'northwest arrow',
 );
 
 //Misc
@@ -430,23 +435,23 @@ LatexCmds.clubsuit = bindVanillaSymbol('\\clubsuit ', '&#9827;', 'club suit');
 LatexCmds.diamondsuit = bindVanillaSymbol(
   '\\diamondsuit ',
   '&#9826;',
-  'diamond suit'
+  'diamond suit',
 );
 LatexCmds.heartsuit = bindVanillaSymbol(
   '\\heartsuit ',
   '&#9825;',
-  'heart suit'
+  'heart suit',
 );
 LatexCmds.spadesuit = bindVanillaSymbol(
   '\\spadesuit ',
   '&#9824;',
-  'spade suit'
+  'spade suit',
 );
 //not real LaTex command see https://github.com/mathquill/mathquill/pull/552 for more details
 LatexCmds.parallelogram = bindVanillaSymbol(
   '\\parallelogram ',
   '&#9649;',
-  'parallelogram'
+  'parallelogram',
 );
 LatexCmds.square = bindVanillaSymbol('\\square ', '&#11036;', 'square');
 
@@ -457,7 +462,7 @@ LatexCmds.bigcup = bindVanillaSymbol('\\bigcup ', '&#8746;', 'big cup');
 LatexCmds.bigsqcup = bindVanillaSymbol(
   '\\bigsqcup ',
   '&#8852;',
-  'big square cup'
+  'big square cup',
 );
 LatexCmds.bigvee = bindVanillaSymbol('\\bigvee ', '&#8744;', 'big vee');
 LatexCmds.bigwedge = bindVanillaSymbol('\\bigwedge ', '&#8743;', 'big wedge');
@@ -465,7 +470,7 @@ LatexCmds.bigodot = bindVanillaSymbol('\\bigodot ', '&#8857;', 'big o dot');
 LatexCmds.bigotimes = bindVanillaSymbol(
   '\\bigotimes ',
   '&#8855;',
-  'big o times'
+  'big o times',
 );
 LatexCmds.bigoplus = bindVanillaSymbol('\\bigoplus ', '&#8853;', 'big o plus');
 LatexCmds.biguplus = bindVanillaSymbol('\\biguplus ', '&#8846;', 'big u plus');
@@ -478,12 +483,12 @@ LatexCmds.rceil = bindVanillaSymbol('\\rceil ', '&#8969;', 'right ceiling');
 LatexCmds.opencurlybrace = LatexCmds.lbrace = bindVanillaSymbol(
   '\\lbrace ',
   '{',
-  'left brace'
+  'left brace',
 );
 LatexCmds.closecurlybrace = LatexCmds.rbrace = bindVanillaSymbol(
   '\\rbrace ',
   '}',
-  'right brace'
+  'right brace',
 );
 LatexCmds.lbrack = bindVanillaSymbol('[', 'left bracket');
 LatexCmds.rbrack = bindVanillaSymbol(']', 'right bracket');
@@ -494,7 +499,7 @@ LatexCmds.vert = bindVanillaSymbol('|', 'vertical bar');
 LatexCmds.perp = LatexCmds.perpendicular = bindVanillaSymbol(
   '\\perp ',
   '&perp;',
-  'perpendicular'
+  'perpendicular',
 );
 LatexCmds.nabla = LatexCmds.del = bindVanillaSymbol('\\nabla ', '&nabla;');
 LatexCmds.hbar = bindVanillaSymbol('\\hbar ', '&#8463;', 'horizontal bar');
@@ -512,13 +517,13 @@ LatexCmds.ring =
 LatexCmds.bull = LatexCmds.bullet = bindVanillaSymbol(
   '\\bullet ',
   '&bull;',
-  'bullet'
+  'bullet',
 );
 
 LatexCmds.setminus = LatexCmds.smallsetminus = bindVanillaSymbol(
   '\\setminus ',
   '&#8726;',
-  'set minus'
+  'set minus',
 );
 
 LatexCmds.not = //bind(MQSymbol,'\\not ','<span class="not">/</span>', 'not');
@@ -555,13 +560,13 @@ LatexCmds.diverges =
 LatexCmds.uArr = LatexCmds.Uparrow = bindVanillaSymbol(
   '\\Uparrow ',
   '&uArr;',
-  'up arrow'
+  'up arrow',
 );
 
 LatexCmds.rarr = LatexCmds.rightarrow = bindVanillaSymbol(
   '\\rightarrow ',
   '&rarr;',
-  'right arrow'
+  'right arrow',
 );
 
 LatexCmds.implies = bindBinaryOperator('\\Rightarrow ', '&rArr;', 'implies');
@@ -569,7 +574,7 @@ LatexCmds.implies = bindBinaryOperator('\\Rightarrow ', '&rArr;', 'implies');
 LatexCmds.rArr = LatexCmds.Rightarrow = bindVanillaSymbol(
   '\\Rightarrow ',
   '&rArr;',
-  'right arrow'
+  'right arrow',
 );
 
 LatexCmds.gets = bindBinaryOperator('\\gets ', '&larr;', 'gets');
@@ -577,19 +582,19 @@ LatexCmds.gets = bindBinaryOperator('\\gets ', '&larr;', 'gets');
 LatexCmds.larr = LatexCmds.leftarrow = bindVanillaSymbol(
   '\\leftarrow ',
   '&larr;',
-  'left arrow'
+  'left arrow',
 );
 
 LatexCmds.impliedby = bindBinaryOperator(
   '\\Leftarrow ',
   '&lArr;',
-  'implied by'
+  'implied by',
 );
 
 LatexCmds.lArr = LatexCmds.Leftarrow = bindVanillaSymbol(
   '\\Leftarrow ',
   '&lArr;',
-  'left arrow'
+  'left arrow',
 );
 
 LatexCmds.harr =
@@ -600,7 +605,7 @@ LatexCmds.harr =
 LatexCmds.iff = bindBinaryOperator(
   '\\Leftrightarrow ',
   '&hArr;',
-  'if and only if'
+  'if and only if',
 );
 
 LatexCmds.hArr =
@@ -624,7 +629,7 @@ LatexCmds.Im =
 LatexCmds.part = LatexCmds.partial = bindVanillaSymbol(
   '\\partial ',
   '&part;',
-  'partial'
+  'partial',
 );
 
 LatexCmds.pounds = bindVanillaSymbol('\\pounds ', '&pound;');
@@ -644,7 +649,7 @@ LatexCmds.xist = //LOL
 LatexCmds.nexists = LatexCmds.nexist = bindVanillaSymbol(
   '\\nexists ',
   '&#8708;',
-  'there is no'
+  'there is no',
 );
 
 LatexCmds.and =
@@ -670,7 +675,7 @@ LatexCmds.o =
 LatexCmds.cup = LatexCmds.union = bindBinaryOperator(
   '\\cup ',
   '&cup;',
-  'union'
+  'union',
 );
 
 LatexCmds.cap =
@@ -682,16 +687,16 @@ LatexCmds.cap =
 LatexCmds.deg = LatexCmds.degree = bindVanillaSymbol(
   '\\degree ',
   '&deg;',
-  'degrees'
+  'degrees',
 );
 
 LatexCmds.ang = LatexCmds.angle = bindVanillaSymbol(
   '\\angle ',
   '&ang;',
-  'angle'
+  'angle',
 );
 LatexCmds.measuredangle = bindVanillaSymbol(
   '\\measuredangle ',
   '&#8737;',
-  'measured angle'
+  'measured angle',
 );

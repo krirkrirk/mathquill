@@ -29,7 +29,7 @@ class DigitGroupingChar extends MQSymbol {
     var dots = [];
 
     var SPACE = '\\ ';
-    var DOT = '.';
+    var DOT = ',';
 
     // traverse left as far as possible (starting at this char)
     var node: NodeRef = left;
@@ -171,7 +171,7 @@ class Digit extends DigitGroupingChar {
       ch,
       h('span', { class: 'mq-digit' }, [h.text(ch)]),
       undefined,
-      mathspeak
+      mathspeak,
     );
   }
 
@@ -273,7 +273,7 @@ class Variable extends MQSymbol {
 function bindVariable(
   ch: string,
   htmlEntity: string,
-  _unusedMathspeak?: string
+  _unusedMathspeak?: string,
 ) {
   return () => new Variable(ch, h.entityText(htmlEntity));
 }
@@ -409,7 +409,7 @@ class Letter extends Variable {
     var maxLength = autoParenthesizedFunctions._maxLength || 0;
     var autoOperatorNames = cursor.options.autoOperatorNames;
     while (l instanceof Letter && i < maxLength) {
-      (str = l.letter + str), (l = l[L]), (i += 1);
+      ((str = l.letter + str), (l = l[L]), (i += 1));
     }
     // check for an autoParenthesized functions, going thru substrings longest to shortest
     // only allow autoParenthesized functions that are also autoOperatorNames
@@ -482,7 +482,7 @@ class Letter extends Variable {
           el.ctrlSeq = el.letter;
         }
         return undefined;
-      }
+      },
     );
 
     let autoOpsLength = autoOps._maxLength || 0;
@@ -537,7 +537,7 @@ class Letter extends Variable {
                       .domFrag()
                       .toggleClass(
                         'mq-after-operator-name',
-                        !(supsub[R] instanceof Bracket)
+                        !(supsub[R] instanceof Bracket),
                       );
                   });
               respace();
@@ -559,8 +559,8 @@ class Letter extends Variable {
     // omit padding if no node
     if (!node) return true;
 
-    // do not add padding between letter and '.'
-    if (node.ctrlSeq === '.') return true;
+    // do not add padding between letter and ','
+    if (node.ctrlSeq === ',') return true;
 
     // do not add padding between letter and binary operator. The
     // binary operator already has padding
@@ -598,7 +598,7 @@ function defaultAutoOpNames() {
   var builtInTrigs =
     'sin cos tan arcsin arccos arctan sinh cosh tanh sec csc cot coth'.split(
       // why coth but not sech and csch, LaTeX?
-      ' '
+      ' ',
     );
   for (var i = 0; i < builtInTrigs.length; i += 1) {
     BuiltInOpNames[builtInTrigs[i]] = 1;
@@ -721,7 +721,7 @@ LatexCmds.f = class extends Letter {
 
     this.letter = letter;
     this.domView = new DOMView(0, () =>
-      h('var', { class: 'mq-f' }, [h.text('f')])
+      h('var', { class: 'mq-f' }, [h.text('f')]),
     );
   }
   italicize(bool: boolean) {
@@ -737,18 +737,18 @@ LatexCmds.f = class extends Letter {
 LatexCmds[' '] = LatexCmds.space = () =>
   new DigitGroupingChar('\\ ', h('span', {}, [h.text(U_NO_BREAK_SPACE)]), ' ');
 
-LatexCmds['.'] = () =>
+LatexCmds[','] = () =>
   new DigitGroupingChar(
-    '.',
-    h('span', { class: 'mq-digit' }, [h.text('.')]),
-    '.'
+    ',',
+    h('span', { class: 'mq-digit' }, [h.text(',')]),
+    ',',
   );
 
 LatexCmds["'"] = LatexCmds.prime = bindVanillaSymbol("'", '&prime;', 'prime');
 LatexCmds['″'] = LatexCmds.dprime = bindVanillaSymbol(
   '″',
   '&Prime;',
-  'double prime'
+  'double prime',
 );
 
 LatexCmds.backslash = bindVanillaSymbol('\\backslash ', '\\', 'backslash');
@@ -783,7 +783,7 @@ LatexCmds['%'] = class extends NonSymbolaSymbol {
       .then(
         string('\\operatorname{of}').map(function () {
           return PercentOfBuilder();
-        })
+        }),
       )
       .or(super.parser());
   }
@@ -792,19 +792,19 @@ LatexCmds['%'] = class extends NonSymbolaSymbol {
 LatexCmds['∥'] = LatexCmds.parallel = bindVanillaSymbol(
   '\\parallel ',
   '&#x2225;',
-  'parallel'
+  'parallel',
 );
 
 LatexCmds['∦'] = LatexCmds.nparallel = bindVanillaSymbol(
   '\\nparallel ',
   '&#x2226;',
-  'not parallel'
+  'not parallel',
 );
 
 LatexCmds['⟂'] = LatexCmds.perp = bindVanillaSymbol(
   '\\perp ',
   '&#x27C2;',
-  'perpendicular'
+  'perpendicular',
 );
 
 //the following are all Greek to me, but this helped a lot: http://www.ams.org/STIX/ion/stixsig03.html
@@ -842,7 +842,7 @@ LatexCmds.epsiv = LatexCmds.varepsilon = bindVariable(
   //Elsevier and 9573-13 //AMS and LaTeX
   '\\varepsilon ',
   '&epsilon;',
-  'epsilon'
+  'epsilon',
 );
 
 LatexCmds.piv = LatexCmds.varpi = bindVariable('\\varpi ', '&piv;', 'piv'); //W3C/Unicode and Elsevier and 9573-13 //AMS and LaTeX
@@ -861,7 +861,7 @@ LatexCmds.upsilon = LatexCmds.upsi = bindVariable(
   //AMS and LaTeX and W3C/Unicode //Elsevier and 9573-13
   '\\upsilon ',
   '&upsilon;',
-  'upsilon'
+  'upsilon',
 );
 
 //these aren't even mentioned in the HTML character entity references
@@ -874,7 +874,7 @@ LatexCmds.kappav = LatexCmds.varkappa = bindVariable(
   //Elsevier //AMS and LaTeX
   '\\varkappa ',
   '&#1008;',
-  'kappa'
+  'kappa',
 );
 
 LatexCmds.rhov = LatexCmds.varrho = bindVariable('\\varrho ', '&#1009;', 'rho'); //Elsevier and 9573-13 //AMS and LaTeX
@@ -895,7 +895,7 @@ LatexCmds.Upsilon = //LaTeX
       new MQSymbol(
         '\\Upsilon ',
         h('var', { style: 'font-family: serif' }, [h.entityText('&upsih;')]),
-        'capital upsilon'
+        'capital upsilon',
       ); //Symbola's 'upsilon with a hook' is a capital Y without hooks :(
 
 //other symbols with the same LaTeX command and HTML character entity reference
@@ -1102,11 +1102,6 @@ LatexCmds.mp =
   LatexCmds.minusplus =
     () => new PlusMinus('\\mp ', h.entityText('&#8723;'), 'minus-or-plus');
 
-CharCmds['*'] =
-  LatexCmds.sdot =
-  LatexCmds.cdot =
-    bindBinaryOperator('\\cdot ', '&middot;', '*', 'times'); //semantically should be &sdot;, but &middot; looks better
-
 class To extends BinaryOperator {
   constructor() {
     super('\\to ', h.entityText('&rarr;'), 'to');
@@ -1139,7 +1134,7 @@ class Inequality extends BinaryOperator {
       data[`ctrlSeq${strictness}`],
       h.entityText(data[`htmlEntity${strictness}`]),
       data[`text${strictness}`],
-      data[`mathspeak${strictness}`]
+      data[`mathspeak${strictness}`],
     );
 
     this.data = data;
@@ -1253,8 +1248,9 @@ LatexCmds['×'] = LatexCmds.times = bindBinaryOperator(
   '\\times ',
   '&times;',
   '[x]',
-  'times'
+  'times',
 );
+LatexCmds['*'] = LatexCmds['×'];
 
 LatexCmds['÷'] =
   LatexCmds.div =
