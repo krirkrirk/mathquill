@@ -5,7 +5,7 @@
 <title>MathQuill Matrix Test</title>
 
 <link rel="stylesheet" type="text/css" href="../build/mathquill.css">
-<script type="text/javascript" src="support/jquery-1.7.2.js"></script>
+<script type="text/javascript" src="support/jquery-1.5.2.js"></script>
 <script type="text/javascript" src="../build/mathquill.js"></script>
 </head>
 <body>
@@ -16,8 +16,8 @@
 </span>
 
 <script>
-MathQuill = MathQuill.getInterface(1);
-instance = MathQuill.MathField(document.getElementById('example'));
+MQ = MathQuill.getInterface(MathQuill.getInterface.MAX);
+instance = MQ.MathField(document.getElementById('example'));
 console.log(instance.latex());
 </script>
 
