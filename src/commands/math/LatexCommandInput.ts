@@ -18,7 +18,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
         h.text('\\'),
         h.block('span', {}, blocks[0]),
       ]),
-    ])
+    ]),
   );
   textTemplate = ['\\'];
   createBlocks() {
@@ -57,7 +57,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
     endsL.keystroke = function (key, e, ctrlr) {
       if (key === 'Tab' || key === 'Enter' || key === 'Spacebar') {
         var cmd = (this.parent as LatexCommandInput).renderCommand(
-          ctrlr.cursor
+          ctrlr.cursor,
         );
         // TODO needs tests
         ctrlr.aria.alert(cmd.mathspeak({ createdLeftOf: ctrlr.cursor }));
@@ -106,7 +106,7 @@ CharCmds['\\'] = class LatexCommandInput extends MathCommand {
 
     var latex = this.getEnd(L).latex();
     if (!latex) latex = ' ';
-    var cmd = LatexCmds[latex];
+    var cmd = LatexCmds[latex] || Environments[latex];
 
     if (cmd) {
       let node: MQNode;
