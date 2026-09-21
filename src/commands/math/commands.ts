@@ -1704,9 +1704,27 @@ LatexCmds.embed = EmbedNode;
 // special manner depending on the environment type.
 var Environments: Record<string, typeof EnvironmentNode> = {};
 
-class EnvironmentNode extends MathCommand {
-  textTemplate = ['\\begin{}', '\\end{}'];
+LatexCmds.begin = class extends MathCommand {
+  parser(): Parser<MQNode | Fragment> {
+    var string = Parser.string;
+    var regex = Parser.regex;
+    return string('{')
+      .then(regex(/^[a-z]+/i))
+      .skip(string('}'))
+      .then(function (env): Parser<MQNode | Fragment> {
+        // hasOwnProperty: "\begin{constructor}" must not resolve to Object.prototype.constructor
+        var klass = Object.prototype.hasOwnProperty.call(Environments, env)
+          ? Environments[env]
+          : undefined;
+        var body: Parser<MQNode | Fragment> = klass
+          ? new klass().parser()
+          : Parser.fail('unknown environment type: ' + env);
+        return body.skip(string('\\end{' + env + '}'));
+      });
+  }
+};
 
+class EnvironmentNode extends MathCommand {
   environment: string;
 
   wrappers() {
@@ -1715,6 +1733,13 @@ class EnvironmentNode extends MathCommand {
       end: `\\end{${this.environment}}`,
     };
   }
+}
+
+// Delimiters (parentheses, brackets...) are keys of SVG_SYMBOLS, the same
+// scalable SVG glyphs that Bracket and Binomial use.
+function getMatrixSymbol(ch: string) {
+  if (!ch || !Object.prototype.hasOwnProperty.call(SVG_SYMBOLS, ch)) return;
+  return SVG_SYMBOLS[ch as keyof typeof SVG_SYMBOLS];
 }
 
 class MatrixNode extends EnvironmentNode {
@@ -1730,7 +1755,534 @@ class MatrixNode extends EnvironmentNode {
     left: '',
     right: '',
   };
+  ariaLabel = 'matrix';
+  mathspeakTemplate = ['StartMatrix,', ', EndMatrix'];
+
+  // Number of cells in the first row. Kept up to date by relink().
+  rowSize: number;
+  // The <table> element of the last html() call (used to toggle .mq-rows-1).
+  table: HTMLElement | undefined;
+
+  // The cells in row-major order. `this.blocks` is the source of truth:
+  // relink() rebuilds every pointer (siblings, parent, ends, up/down) from it.
+  cells() {
+    return this.blocks as MatrixCell[];
+  }
+
+  // Number of cells that would be created by createBlocks()
+  numBlocks() {
+    return this.blocks ? this.blocks.length : 4;
+  }
+
+  html() {
+    // the number of cells varies, so the view is rebuilt on each render
+    // (same approach as Bracket, which depends on this.side)
+    this.domView = new DOMView(this.cells().length, (blocks) =>
+      this.renderMatrix(blocks as MatrixCell[])
+    );
+    return super.html();
+  }
+
+  renderMatrix(cells: MatrixCell[]) {
+    var rows: MatrixCell[][] = [];
+    for (var i = 0; i < cells.length; i += 1) {
+      var r = cells[i].row;
+      (rows[r] = rows[r] || []).push(cells[i]);
+    }
+
+    var leftSymbol = getMatrixSymbol(this.parentheses.left);
+    var rightSymbol = getMatrixSymbol(this.parentheses.right);
+
+    var trs = rows.map((rowCells) =>
+      h(
+        'tr',
+        {},
+        rowCells.map((cell) =>
+          h.block('td', cell.isEmpty() ? { class: 'mq-empty' } : {}, cell)
+        )
+      )
+    );
+
+    var table = h(
+      'table',
+      {
+        class: 'mq-non-leaf' + (rows.length === 1 ? ' mq-rows-1' : ''),
+        style:
+          leftSymbol || rightSymbol
+            ? 'margin-left:' +
+              (leftSymbol ? leftSymbol.width : '0') +
+              ';margin-right:' +
+              (rightSymbol ? rightSymbol.width : '0')
+            : undefined,
+      },
+      [h('tbody', {}, trs)]
+    );
+    this.table = table;
+
+    var children: HTMLElement[] = [];
+    if (leftSymbol) {
+      children.push(
+        h(
+          'span',
+          {
+            style: 'width:' + leftSymbol.width,
+            class: 'mq-scaled mq-paren mq-bracket-l',
+          },
+          [leftSymbol.html()]
+        )
+      );
+    }
+    children.push(table);
+    if (rightSymbol) {
+      children.push(
+        h(
+          'span',
+          {
+            style: 'width:' + rightSymbol.width,
+            class: 'mq-scaled mq-paren mq-bracket-r',
+          },
+          [rightSymbol.html()]
+        )
+      );
+    }
+
+    return h(
+      'span',
+      {
+        class:
+          'mq-matrix mq-non-leaf' +
+          (leftSymbol || rightSymbol ? ' mq-bracket-container' : ''),
+      },
+      children
+    );
+  }
+
+  latex() {
+    var latex = '';
+    var row: number | undefined;
+
+    this.eachChild((child) => {
+      var cell = child as MatrixCell;
+      if (row !== undefined) {
+        latex += row !== cell.row ? this.delimiters.row : this.delimiters.column;
+      }
+      row = cell.row;
+      latex += cell.latex();
+    });
+
+    var wrappers = this.wrappers();
+    return wrappers.begin + latex + wrappers.end;
+  }
+
+  // Returns the cells grouped by row
+  getRows() {
+    var rows: MatrixCell[][] = [];
+    this.eachChild((child) => {
+      var cell = child as MatrixCell;
+      (rows[cell.row] = rows[cell.row] || []).push(cell);
+    });
+    return rows;
+  }
+
+  text() {
+    return (
+      '[' +
+      this.getRows()
+        .map((row) => '[' + row.map((cell) => cell.text()).join(',') + ']')
+        .join(',') +
+      ']'
+    );
+  }
+
+  mathspeak(_opts?: MathspeakOptions) {
+    var body = this.getRows()
+      .map(
+        (row, i) =>
+          'row ' +
+          (i + 1) +
+          ', ' +
+          row.map((cell) => cell.mathspeak()).join(', ')
+      )
+      .join(', ');
+    return (
+      this.mathspeakTemplate[0] + ' ' + body + ' ' + this.mathspeakTemplate[1]
+    );
+  }
+
+  // Create default 4-cell matrix
+  createBlocks() {
+    this.blocks = [
+      new MatrixCell(0, this),
+      new MatrixCell(0, this),
+      new MatrixCell(1, this),
+      new MatrixCell(1, this),
+    ];
+  }
+
+  parser(): Parser<MQNode | Fragment> {
+    var self = this;
+    var optWhitespace = Parser.optWhitespace;
+    var string = Parser.string;
+    var delimiters = this.delimiters;
+
+    return optWhitespace
+      .then(
+        string(delimiters.column)
+          .or(string(delimiters.row))
+          .or(latexMathParser.block)
+      )
+      .many()
+      .skip(optWhitespace)
+      .then(function (items) {
+        var blocks: MathBlock[] = [];
+        var cells: MatrixCell[] = [];
+        var row = 0;
+
+        function addCell() {
+          cells.push(new MatrixCell(row, undefined, blocks));
+          blocks = [];
+        }
+
+        for (var i = 0; i < items.length; i += 1) {
+          var item = items[i];
+          if (item instanceof MathBlock) {
+            blocks.push(item);
+          } else {
+            addCell();
+            if (item === delimiters.row) row += 1;
+          }
+        }
+        // A trailing row delimiter (a&b\\c&d\\) ends the last row: it does
+        // not start a new, empty one.
+        if (!(items.length && items[items.length - 1] === delimiters.row)) {
+          addCell();
+        }
+
+        self.blocks = cells;
+        self.autocorrect();
+        self.relink();
+        return Parser.succeed(self);
+      });
+  }
+
+  // Relink all the cells after parsing or after a structural change
+  finalizeTree() {
+    this.relink();
+    var cells = this.cells();
+    if (this.table) {
+      this.table.classList.toggle(
+        'mq-rows-1',
+        cells[cells.length - 1].row === 0
+      );
+    }
+  }
+
+  // Enter the matrix at the top or bottom row if updown is configured.
+  getEntryPoint(dir: Direction, _cursor: Cursor, updown: 'up' | 'down') {
+    var blocks = this.cells();
+    if (updown === 'up') {
+      if (dir === L) {
+        return blocks[this.rowSize - 1];
+      } else {
+        return blocks[0];
+      }
+    } else {
+      // updown === 'down'
+      if (dir === L) {
+        return blocks[blocks.length - 1];
+      } else {
+        return blocks[blocks.length - this.rowSize];
+      }
+    }
+  }
+
+  // Exit the matrix at the first and last columns if updown is configured.
+  atExitPoint(dir: Direction, cursor: Cursor) {
+    // Which block are we in?
+    var i = this.cells().indexOf(cursor.parent as MatrixCell);
+    if (dir === L) {
+      // If we're on the left edge and moving left, we should exit.
+      return i % this.rowSize === 0;
+    } else {
+      // If we're on the right edge and moving right, we should exit.
+      return (i + 1) % this.rowSize === 0;
+    }
+  }
+
+  moveTowards(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
+    var entryPoint = updown && this.getEntryPoint(dir, cursor, updown);
+    cursor.insAtDirEnd(-dir as Direction, entryPoint || this.getEnd(-dir as Direction));
+    cursor.controller.aria
+      .queueDirEndOf(-dir as Direction)
+      .queue(cursor.parent, true);
+  }
+
+  // Set up directional pointers between cells
+  relink() {
+    var blocks = this.cells();
+    var rows: MatrixCell[][] = [];
+    var row: number | undefined;
+    var column = 0;
+
+    // The row size will be used by other functions down the track.
+    // Begin by assuming we're a one-row matrix, and we'll overwrite this
+    // if we find another row.
+    this.rowSize = blocks.length;
+
+    for (var i = 0; i < blocks.length; i += 1) {
+      var cell = blocks[i];
+
+      // Drop stale vertical links, e.g. towards a row that was deleted
+      cell.upOutOf = undefined;
+      cell.downOutOf = undefined;
+      cell.parent = this;
+
+      if (row !== cell.row) {
+        if (cell.row === 1) {
+          // We've just finished iterating the first row.
+          this.rowSize = column;
+        }
+        row = cell.row;
+        rows[row] = [];
+        column = 0;
+      }
+      rows[row][column] = cell;
+
+      // Set up horizontal linkage
+      cell[L] = blocks[i - 1] || 0;
+      cell[R] = blocks[i + 1] || 0;
+
+      // Set up vertical linkage
+      var above = rows[row - 1] && rows[row - 1][column];
+      if (above) {
+        cell.upOutOf = above;
+        above.downOutOf = cell;
+      }
+
+      column += 1;
+    }
+
+    // set start and end blocks of matrix
+    this.setEnds({ [L]: blocks[0], [R]: blocks[blocks.length - 1] });
+  }
+
+  // Ensure consistent row lengths
+  autocorrect() {
+    var lengths: number[] = [];
+    var rows: MatrixCell[][] = [];
+    var blocks = this.cells();
+
+    for (var i = 0; i < blocks.length; i += 1) {
+      var row = blocks[i].row;
+      rows[row] = rows[row] || [];
+      rows[row].push(blocks[i]);
+      lengths[row] = rows[row].length;
+    }
+
+    var maxLength = Math.max.apply(null, lengths);
+    if (maxLength !== Math.min.apply(null, lengths)) {
+      // Pad shorter rows to correct length
+      for (i = 0; i < rows.length; i += 1) {
+        var shortfall = maxLength - rows[i].length;
+        while (shortfall) {
+          var position = maxLength * i + rows[i].length;
+          blocks.splice(position, 0, new MatrixCell(i));
+          shortfall -= 1;
+        }
+      }
+      this.relink();
+    }
+  }
+
+  // Deleting a cell will also delete the current row and
+  // column if they are empty, and relink the matrix.
+  deleteCell(currentCell: MatrixCell) {
+    var rows: MatrixCell[][] = [];
+    var columns: MatrixCell[][] = [];
+    var myRow: MatrixCell[] = [];
+    var myColumn: MatrixCell[] = [];
+    var blocks = this.cells();
+    var row: number | undefined;
+    var column = 0;
+
+    // Create arrays for cells in the current row / column
+    this.eachChild((child) => {
+      var cell = child as MatrixCell;
+      if (row !== cell.row) {
+        row = cell.row;
+        rows[row] = [];
+        column = 0;
+      }
+      columns[column] = columns[column] || [];
+      columns[column].push(cell);
+      rows[row].push(cell);
+
+      if (cell === currentCell) {
+        myRow = rows[row];
+        myColumn = columns[column];
+      }
+
+      column += 1;
+    });
+
+    function isEmpty(cells: MatrixCell[]) {
+      return cells.every((cell) => cell.isEmpty());
+    }
+
+    function remove(cells: MatrixCell[]) {
+      for (var i = 0; i < cells.length; i += 1) {
+        var index = blocks.indexOf(cells[i]);
+        if (index > -1) {
+          cells[i].remove();
+          blocks.splice(index, 1);
+        }
+      }
+    }
+
+    if (isEmpty(myRow) && myColumn.length > 1) {
+      var rowIndex = rows.indexOf(myRow);
+      // Grab the <tr> before its cells are detached
+      var tr = myRow[0].domFrag().oneElement().parentElement;
+      // Decrease all following row numbers
+      this.eachChild((child) => {
+        var cell = child as MatrixCell;
+        if (cell.row > rowIndex) cell.row -= 1;
+      });
+      // Dispose of cells and remove <tr>
+      remove(myRow);
+      if (tr) domFrag(tr).remove();
+    }
+    if (isEmpty(myColumn) && myRow.length > 1) {
+      remove(myColumn);
+    }
+    this.finalizeTree();
+  }
+
+  addRow(afterCell: MatrixCell) {
+    var previous: MatrixCell[] = [];
+    var newCells: MatrixCell[] = [];
+    var next: MatrixCell[] = [];
+    var row = afterCell.row;
+    var columns = 0;
+    var column = 0;
+
+    this.eachChild((child) => {
+      var cell = child as MatrixCell;
+      // Cache previous rows
+      if (cell.row <= row) {
+        previous.push(cell);
+      }
+      // Work out how many columns
+      if (cell.row === row) {
+        if (cell === afterCell) column = columns;
+        columns += 1;
+      }
+      // Cache cells after new row
+      if (cell.row > row) {
+        cell.row += 1;
+        next.push(cell);
+      }
+    });
+
+    // Add new cells, one for each column, and their <td>s
+    var tds: HTMLElement[] = [];
+    for (var i = 0; i < columns; i += 1) {
+      var block = new MatrixCell(row + 1);
+      newCells.push(block);
+      tds.push(h.block('td', { class: 'mq-empty' }, block));
+    }
+
+    // Insert the new row right after the current one
+    var currentTr = afterCell.domFrag().oneElement().parentElement;
+    if (currentTr) domFrag(h('tr', {}, tds)).insDirOf(R, domFrag(currentTr));
+
+    this.blocks = previous.concat(newCells, next);
+    return newCells[column];
+  }
+
+  addColumn(afterCell: MatrixCell) {
+    var rows: MatrixCell[][] = [];
+    var newCells: MatrixCell[] = [];
+    var column = 0;
+
+    // Build rows array and find new column index
+    this.eachChild((child) => {
+      var cell = child as MatrixCell;
+      rows[cell.row] = rows[cell.row] || [];
+      rows[cell.row].push(cell);
+      if (cell === afterCell) column = rows[cell.row].length;
+    });
+
+    // Add new cells, one for each row, and their <td>s
+    for (var i = 0; i < rows.length; i += 1) {
+      var leftNeighbour = rows[i][column - 1];
+      var block = new MatrixCell(i);
+      newCells.push(block);
+      rows[i].splice(column, 0, block);
+      domFrag(h.block('td', { class: 'mq-empty' }, block)).insDirOf(
+        R,
+        leftNeighbour.domFrag()
+      );
+    }
+
+    // Flatten the rows array-of-arrays
+    this.blocks = ([] as MatrixCell[]).concat.apply([], rows);
+    return newCells[afterCell.row];
+  }
+
+  insert(method: 'addRow' | 'addColumn', afterCell: MatrixCell, cursor: Cursor) {
+    var cellToFocus = this[method](afterCell);
+    this.finalizeTree();
+    this.bubble(function (node) {
+      node.reflow();
+      return undefined;
+    });
+    cursor.insAtRightEnd(cellToFocus);
+    cursor.controller.notify('move');
+  }
+
+  backspace(
+    cell: MatrixCell,
+    dir: Direction,
+    cursor: Cursor,
+    finalDeleteCallback: () => void
+  ) {
+    if (!cell.isEmpty()) return;
+
+    var blocks = this.cells();
+    // Remembered now: a removed cell keeps its stale sibling pointers,
+    // which lets us walk past other removed cells to a surviving one.
+    var dirwards = cell[dir] as MatrixCell | 0;
+    var oppwards = cell[-dir as Direction] as MatrixCell | 0;
+
+    this.deleteCell(cell);
+    var cellRemoved = blocks.indexOf(cell) === -1;
+
+    function survivor(start: MatrixCell | 0, towards: Direction) {
+      var node = start;
+      while (node && blocks.indexOf(node) === -1) {
+        node = node[towards] as MatrixCell | 0;
+      }
+      return node;
+    }
+
+    var target = survivor(dirwards, dir);
+    if (target) {
+      cursor.insAtDirEnd(-dir as Direction, target);
+    } else if (cellRemoved) {
+      // The cell the cursor was in is gone and there is nothing before it:
+      // land at the start of whatever took its place instead of in a
+      // detached cell.
+      var replacement = survivor(oppwards, -dir as Direction);
+      if (replacement) cursor.insAtDirEnd(dir, replacement);
+    }
+
+    if (blocks.length === 1 && blocks[0].isEmpty()) {
+      finalDeleteCallback();
+    }
+  }
 }
+Environments.matrix = MatrixNode;
 
 class ParenthesisMatrixNode extends MatrixNode {
   environment = 'pmatrix';
@@ -1753,7 +2305,7 @@ class SquareBracketMatrixNode extends MatrixNode {
 Environments.bmatrix = SquareBracketMatrixNode;
 
 class BracesMatrixNode extends MatrixNode {
-  environment = 'Bmatrix ';
+  environment = 'Bmatrix';
 
   parentheses = {
     left: '{',
@@ -1776,12 +2328,61 @@ class DoubleBarMatrixNode extends MatrixNode {
   environment = 'Vmatrix';
 
   parentheses = {
-    left: '&#8214;',
-    right: '&#8214;',
+    left: '&#8741;',
+    right: '&#8741;',
   };
 }
 Environments.Vmatrix = DoubleBarMatrixNode;
 
 // Replacement for mathblocks inside matrix cells
 // Adds matrix-specific keyboard commands
-class MatrixCell extends MathBlock {}
+class MatrixCell extends MathBlock {
+  row: number;
+
+  constructor(row: number, parent?: MatrixNode, replaces?: MathBlock[]) {
+    super();
+    this.row = row;
+    if (parent) {
+      this.adopt(parent, parent.getEnd(R), 0);
+    }
+    if (replaces) {
+      for (var i = 0; i < replaces.length; i += 1) {
+        replaces[i].children().adopt(this, this.getEnd(R), 0);
+      }
+    }
+  }
+
+  keystroke(key: string, e: KeyboardEvent | undefined, ctrlr: Controller) {
+    switch (key) {
+      case 'Shift-Spacebar':
+        e?.preventDefault();
+        (this.parent as MatrixNode).insert('addColumn', this, ctrlr.cursor);
+        return;
+      case 'Shift-Enter':
+        e?.preventDefault();
+        (this.parent as MatrixNode).insert('addRow', this, ctrlr.cursor);
+        return;
+    }
+    return super.keystroke(key, e, ctrlr);
+  }
+
+  deleteOutOf(dir: Direction, cursor: Cursor) {
+    (this.parent as MatrixNode).backspace(this, dir, cursor, () =>
+      super.deleteOutOf(dir, cursor)
+    );
+  }
+
+  moveOutOf(dir: Direction, cursor: Cursor, updown?: 'up' | 'down') {
+    var matrix = this.parent as MatrixNode;
+    var atExitPoint = updown && matrix.atExitPoint(dir, cursor);
+    // Step out of the matrix if we've moved past an edge column
+    if (!atExitPoint && this[dir]) {
+      var otherDir = -dir as Direction;
+      cursor.insAtDirEnd(otherDir, this[dir] as MQNode);
+      cursor.controller.aria.queueDirEndOf(otherDir).queue(cursor.parent, true);
+    } else {
+      cursor.insDirOf(dir, matrix);
+      cursor.controller.aria.queueDirOf(dir).queue(matrix);
+    }
+  }
+}

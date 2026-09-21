@@ -13,7 +13,7 @@ interface InternalMathQuillInstance {
   mathquillify(classNames: string): void;
   __mathquillify(
     opts: ConfigOptions,
-    _interfaceVersion: number
+    _interfaceVersion: number,
   ): IBaseMathQuill;
   config(opts: ConfigOptions): IBaseMathQuill;
 }
@@ -77,7 +77,7 @@ type AutoDict = {
 
 type SubstituteKeyboardEvents = (
   el: $,
-  controller: Controller
+  controller: Controller,
 ) => {
   select: (text: string) => void;
 };
@@ -151,7 +151,7 @@ var insistOnInterVer = function () {
         '    // now MathQuill.MathField() works like it used to\n' +
         '\n' +
         'See also the "`dev` branch (2014–2015) → v0.10.0 Migration Guide" at\n' +
-        '  https://github.com/mathquill/mathquill/wiki/%60dev%60-branch-(2014%E2%80%932015)-%E2%86%92-v0.10.0-Migration-Guide'
+        '  https://github.com/mathquill/mathquill/wiki/%60dev%60-branch-(2014%E2%80%932015)-%E2%86%92-v0.10.0-Migration-Guide',
     );
 };
 // globally exported API object
@@ -181,7 +181,7 @@ MathQuill.interfaceVersion = function (v: number) {
           '    // now MathQuill.MathField() works like it used to\n' +
           '\n' +
           'See also the "`dev` branch (2014–2015) → v0.10.0 Migration Guide" at\n' +
-          '  https://github.com/mathquill/mathquill/wiki/%60dev%60-branch-(2014%E2%80%932015)-%E2%86%92-v0.10.0-Migration-Guide'
+          '  https://github.com/mathquill/mathquill/wiki/%60dev%60-branch-(2014%E2%80%932015)-%E2%86%92-v0.10.0-Migration-Guide',
       );
   };
   insistOnInterVer();
@@ -233,7 +233,7 @@ function getInterface(v: number): MathQuill.v3.API | MathQuill.v1.API {
               "As of interface version 3, the 'substituteKeyboardEvents'",
               "option is no longer supported. Use 'overrideTypedText' and",
               "'overrideKeystroke' instead.",
-            ].join(' ')
+            ].join(' '),
           );
         }
         var value = (newOptions as any)[name]; // TODO - think about typing this better
@@ -263,7 +263,7 @@ function getInterface(v: number): MathQuill.v3.API | MathQuill.v1.API {
 
     abstract __mathquillify(
       opts: ConfigOptions,
-      _interfaceVersion: number
+      _interfaceVersion: number,
     ): IBaseMathQuill;
 
     mathquillify(classNames: string) {
@@ -277,7 +277,7 @@ function getInterface(v: number): MathQuill.v3.API | MathQuill.v1.API {
       root.setDOM(
         domFrag(h('span', { class: 'mq-root-block', 'aria-hidden': true }))
           .appendTo(el)
-          .oneElement()
+          .oneElement(),
       );
       NodeBase.linkElementByBlockNode(root.domFrag().oneElement(), root);
       this.latex(contents.text());
@@ -384,11 +384,13 @@ function getInterface(v: number): MathQuill.v3.API | MathQuill.v1.API {
         cursor = ctrlr.cursor;
       if (/^\\[a-z]+$/i.test(cmd) && !cursor.isTooDeep()) {
         cmd = cmd.slice(1);
-        var klass = (LatexCmds as LatexCmdsAny)[cmd];
+        var klass =
+          (LatexCmds as LatexCmdsAny)[cmd] ||
+          (Environments as LatexCmdsAny)[cmd];
         var node;
         if (klass) {
-          if (klass.constructor) {
-            node = new klass(cmd);
+          if (isMQNodeClass(klass)) {
+            node = new (klass as LatexCmdsAny)(cmd);
           } else {
             node = klass(cmd);
           }
@@ -518,7 +520,7 @@ function getInterface(v: number): MathQuill.v3.API | MathQuill.v1.API {
 
   MQ.registerEmbed = function (
     name: string,
-    options: (data: EmbedOptionsData) => EmbedOptions
+    options: (data: EmbedOptionsData) => EmbedOptions,
   ) {
     if (!/^[a-z][a-z0-9]*$/i.test(name)) {
       throw 'Embed name must start with letter and be only letters and digits';
@@ -535,7 +537,7 @@ function getInterface(v: number): MathQuill.v3.API | MathQuill.v1.API {
   MQ.MathField = createEntrypoint('MathField', APIClasses.MathField!);
   MQ.InnerMathField = createEntrypoint(
     'InnerMathField',
-    APIClasses.InnerMathField
+    APIClasses.InnerMathField,
   );
   if (APIClasses.TextField) {
     MQ.TextField = createEntrypoint('TextField', APIClasses.TextField);
@@ -553,14 +555,14 @@ function getInterface(v: number): MathQuill.v3.API | MathQuill.v1.API {
 
   function createEntrypoint<
     K extends keyof typeof API,
-    MQClass extends IBaseMathQuillClass | IEditableFieldClass
+    MQClass extends IBaseMathQuillClass | IEditableFieldClass,
   >(kind: K, APIClass: MQClass) {
     pray(kind + ' is defined', APIClass);
 
     function mqEntrypoint(el: null | undefined): null;
     function mqEntrypoint(
       el: HTMLElement,
-      config?: ConfigOptions
+      config?: ConfigOptions,
     ): InstanceType<MQClass>;
     function mqEntrypoint(el?: HTMLElement | null, opts?: ConfigOptions) {
       if (!el || !el.nodeType) return null;
@@ -569,7 +571,7 @@ function getInterface(v: number): MathQuill.v3.API | MathQuill.v1.API {
       var ctrlr = new Controller(
         new APIClass.RootBlock() as ControllerRoot,
         el,
-        new BaseOptions(version)
+        new BaseOptions(version),
       );
       ctrlr.KIND_OF_MQ = kind;
       return new APIClass(ctrlr).__mathquillify(opts || {}, version);

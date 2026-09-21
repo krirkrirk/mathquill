@@ -48,15 +48,15 @@ var latexMathParser = (function () {
       string('\\').then(
         regex(/^[a-z]+/i)
           .or(regex(/^\s+/).result(' '))
-          .or(any)
-      )
+          .or(any),
+      ),
     )
     .then(function (ctrlSeq) {
       // TODO - is Parser<MQNode> correct?
       var cmdKlass = (LatexCmds as LatexCmdsSingleChar)[ctrlSeq];
 
       if (cmdKlass) {
-        if (cmdKlass.constructor) {
+        if (isMQNodeClass(cmdKlass)) {
           var actualClass = cmdKlass as typeof TempSingleCharNode; // TODO - figure out how to know the difference
           return new actualClass(ctrlSeq).parser();
         } else {
@@ -85,7 +85,7 @@ var latexMathParser = (function () {
         })
         .many()
         .map(joinBlocks)
-        .skip(optWhitespace)
+        .skip(optWhitespace),
     )
     .skip(string(']'));
   var latexMath: typeof mathSequence & {
@@ -284,7 +284,7 @@ class Controller_latex extends Controller_keystroke {
         'tried updating latex efficiently but did not work. Attempted: ' +
           latex +
           ' but wrote: ' +
-          currentLatex
+          currentLatex,
       );
       return false;
     }

@@ -80,7 +80,7 @@ class MathElement extends MQNode {
 class DOMView {
   constructor(
     public readonly childCount: number,
-    public readonly render: (blocks: MathBlock[]) => Element
+    public readonly render: (blocks: MathBlock[]) => Element,
   ) {}
 }
 
@@ -110,7 +110,7 @@ class MathCommand extends MathElement {
   setCtrlSeqHtmlAndText(
     ctrlSeq?: string,
     domView?: DOMView,
-    textTemplate?: string[]
+    textTemplate?: string[],
   ) {
     if (!this.ctrlSeq) this.ctrlSeq = ctrlSeq;
     if (domView) this.domView = domView;
@@ -175,7 +175,7 @@ class MathCommand extends MathElement {
     cursor.insAtRightEnd(
       this.foldChildren(this.getEnd(L), function (leftward, child) {
         return leftward.isEmpty() ? leftward : child;
-      })
+      }),
     );
   }
 
@@ -316,7 +316,7 @@ class MathCommand extends MathElement {
           ' ' +
           (cmd.mathspeakTemplate[i] + ' ' || 'End' + cmd.ctrlSeq + ' ')
         );
-      }
+      },
     );
   }
 }
@@ -329,7 +329,7 @@ class MQSymbol extends MathCommand {
     ctrlSeq?: string,
     html?: HTMLElement,
     text?: string,
-    mathspeak?: string
+    mathspeak?: string,
   ) {
     super();
     this.setCtrlSeqHtmlTextAndMathspeak(
@@ -338,7 +338,7 @@ class MQSymbol extends MathCommand {
         ? new DOMView(0, () => html.cloneNode(true) as HTMLElement)
         : undefined,
       text,
-      mathspeak
+      mathspeak,
     );
   }
 
@@ -346,7 +346,7 @@ class MQSymbol extends MathCommand {
     ctrlSeq?: string,
     html?: DOMView,
     text?: string,
-    mathspeak?: string
+    mathspeak?: string,
   ) {
     if (!text && !!ctrlSeq) {
       text = ctrlSeq.replace(/^\\/, '');
@@ -410,13 +410,13 @@ class VanillaSymbol extends MQSymbol {
 function bindVanillaSymbol(
   ch: string,
   htmlEntity?: string,
-  mathspeak?: string
+  mathspeak?: string,
 ) {
   return () =>
     new VanillaSymbol(
       ch,
       htmlEntity ? h.entityText(htmlEntity) : undefined,
-      mathspeak
+      mathspeak,
     );
 }
 
@@ -426,21 +426,21 @@ class BinaryOperator extends MQSymbol {
     html?: ChildNode,
     text?: string,
     mathspeak?: string,
-    treatLikeSymbol?: boolean
+    treatLikeSymbol?: boolean,
   ) {
     if (treatLikeSymbol) {
       super(
         ctrlSeq,
         h('span', {}, [html || h.text(ctrlSeq || '')]),
         undefined,
-        mathspeak
+        mathspeak,
       );
     } else {
       super(
         ctrlSeq,
         h('span', { class: 'mq-binary-operator' }, html ? [html] : []),
         text,
-        mathspeak
+        mathspeak,
       );
     }
   }
@@ -449,14 +449,14 @@ function bindBinaryOperator(
   ctrlSeq?: string,
   htmlEntity?: string,
   text?: string,
-  mathspeak?: string
+  mathspeak?: string,
 ) {
   return () =>
     new BinaryOperator(
       ctrlSeq,
       htmlEntity ? h.entityText(htmlEntity) : undefined,
       text,
-      mathspeak
+      mathspeak,
     );
 }
 
@@ -603,8 +603,8 @@ class MathBlock extends MathElement {
     else if (
       (cons = (CharCmds as CharCmdsAny)[ch] || (LatexCmds as LatexCmdsAny)[ch])
     ) {
-      if (cons.constructor) {
-        return new cons(ch);
+      if (isMQNodeClass(cons)) {
+        return new (cons as LatexCmdsAny)(ch);
       } else {
         return cons(ch);
       }
